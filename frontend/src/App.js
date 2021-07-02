@@ -1,0 +1,77 @@
+import React, {useEffect, createContext, useReducer, useContext} from 'react';
+import {HashRouter, Route, Switch, useHistory, Redirect} from 'react-router-dom';
+import 'materialize-css/dist/css/materialize.min.css';
+
+import './App.css';
+import NavBar from './components/Navbar';
+import Signin from './components/screens/Signin';
+import Signup from './components/screens/Signup';
+import Profile from './components/screens/Profile';
+import NotFoundPage from './components/screens/NotFoundPage';
+import {reducer, initialState} from './reducers/userReducer';
+
+export const UserContext = createContext();
+
+const Routing = ()=>{
+  const history = useHistory();
+  const {state, dispatch} = useContext(UserContext);
+  const user = JSON.parse(localStorage.getItem("user"));
+  useEffect(()=>{
+    
+    if(user){
+      dispatch({type:"USER", payload: user});
+    }else{
+      history.push('/signin');
+    }
+  },[history,dispatch]);
+  return(
+    <Switch>
+      {state && 
+        <Route path="/" exact>
+          <Profile />
+        </Route>
+      }
+      {!state && 
+        <Switch>
+          <Route path="/signin">
+            <Signin />
+          </Route>
+          <Route path="/signup">
+            <Signup />
+          </Route>
+          <Route>
+            <NotFoundPage />
+          </Route>
+        </Switch>
+      }
+     
+      {state ? 
+        <Switch>
+          <Route path="/profile" exact>
+            <Profile />
+          </Route>
+          <Route>
+            <NotFoundPage />
+          </Route>
+        </Switch>
+        : <Redirect to='/signin' />
+      }  
+    </Switch>
+  );
+}
+
+function App() {
+  const [state, dispatch] = useReducer(reducer, initialState);
+  return (
+    <div className="App">
+      <UserContext.Provider value={{state:state, dispatch:dispatch}}>
+        <HashRouter>
+          <NavBar />
+          <Routing />
+        </HashRouter>
+      </UserContext.Provider>
+    </div>
+  );
+}
+
+export default App;
